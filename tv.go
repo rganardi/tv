@@ -7,7 +7,7 @@ import (
 
 var status int = 0
 
-func die(status int) {
+func die() {
 	if status > 0 {
 		os.Exit(1)
 	} else {
@@ -46,7 +46,7 @@ func prompt() {
 }
 
 func main() {
-	defer die(status)
+	defer die()
 
 	if len(os.Args) < 2 {
 		prompt()

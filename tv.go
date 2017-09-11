@@ -16,7 +16,7 @@ func die() {
 	return
 }
 
-func usage() {
+func usage() error {
 	fmt.Print(`
 tv - showrss handler
 
@@ -30,41 +30,66 @@ Available commands
 
 Interactive mode is started when tv is executed without including the command as a command line parameter. Commands are then entered on the wpa_cli prompt.
 `)
-	return
+	return nil
 }
 
-func fetch(showid string) {
+func fetch(showid string) error {
+	return nil
 }
 
-func list(showid string) {
+func list(showid string) error {
+	return nil
 }
 
-func pull() {
+func pull() error {
+	return nil
 }
 
-func prompt() {
+func prompt() error {
+	return fmt.Errorf("nothing prepared yet, status %d\n", status)
 }
 
 func main() {
 	defer die()
 
 	if len(os.Args) < 2 {
-		prompt()
+		err = prompt()
+		if err != nil {
+			status = 1
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+		}
 		return
 	}
 
 	switch os.Args[1] {
 	case "list":
-		list(os.Args[2])
+		err = list(os.Args[2])
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+		}
 	case "fetch":
-		fetch(os.Args[2])
+		for _, showid := range os.Args[2:] {
+			err = fetch(showid)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+			}
+		}
 	case "pull":
-		pull()
+		err = pull()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+		}
 	case "help":
-		usage()
+		err = usage()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+		}
 	default:
 		fmt.Fprintf(os.Stderr, "error: unknown command\n")
-		usage()
+		err = usage()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+		}
 	}
 
 	return

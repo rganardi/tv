@@ -58,6 +58,10 @@ Interactive mode is started when tv is executed without including the command as
 
 func extract(s, sep string) (string, string) {
 	x := strings.Split(s, sep)
+	if len(x) < 2 {
+		fmt.Fprintf(os.Stderr, "string too short\n")
+		return "", ""
+	}
 	return x[0], x[1]
 }
 
@@ -112,7 +116,6 @@ func fetch(showid string) error {
 		show, url := extract(line, "\t")
 
 		if show == showid {
-			fmt.Fprintf(os.Stdout, "found %v! url is %v\n", show, url)
 			err = download(url, "rss/"+showid)
 			if err != nil {
 				status = 1
@@ -122,7 +125,6 @@ func fetch(showid string) error {
 		}
 	}
 
-	return nil
 }
 
 func list(showid string) error {
@@ -206,7 +208,57 @@ func pull() error {
 }
 
 func prompt() error {
-	return fmt.Errorf("nothing prepared yet, status %d\n", status)
+	fmt.Fprintf(os.Stdout, "hi!\n")
+	for {
+		fmt.Fprintf(os.Stdout, "> ")
+		reader := bufio.NewReader(os.Stdin)
+
+		line, err := reader.ReadString('\n')
+		if err == io.EOF {
+			fmt.Fprintf(os.Stdout, "\rgoodbye!\n")
+			return nil
+		}
+		if err != nil {
+			status = 1
+			return err
+		}
+
+		line = strings.TrimSuffix(line, "\n")
+
+		args := strings.Fields(line)
+
+		switch args[0] {
+		case "list":
+			err = list(args[1])
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+			}
+		case "fetch":
+			err = fetch(args[1])
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+			}
+		case "pull":
+			err = pull()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+			}
+		case "help":
+			err = usage()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+			}
+		case "exit":
+			return nil
+		default:
+			fmt.Fprintf(os.Stderr, "error: unknown command \"%v\"\n", args[0])
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%v\n", err)
+			}
+		}
+
+	}
+	return nil
 }
 
 func main() {

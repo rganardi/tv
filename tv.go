@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -48,6 +49,7 @@ tv - showrss handler
 Available commands
 	list STRING	print the episodes for show STRING
 	fetch STRING	fetch new feed for show STRING
+	get STRING ID	copy the magnet link for show STRING, episode ID
 	pull		fetch new feed for all shows
 	help		display this help text
 
@@ -172,7 +174,8 @@ func list(showid string) error {
 		status = 1
 		return err
 	}
-	for _, eps := range c.Item {
+	for i, eps := range c.Item {
+		fmt.Fprintf(pagerStdin, "id\t\t%v\n", i)
 		fmt.Fprintf(pagerStdin, "title\t\t%v\n", eps.Title)
 		fmt.Fprintf(pagerStdin, "date\t\t%v\n", eps.PubDate)
 		fmt.Fprintf(pagerStdin, "link\t\t%v\n", eps.Link)
@@ -205,6 +208,63 @@ func pull() error {
 		}
 	}
 	return nil
+}
+
+func get(showid string, episodeid string) error {
+	epsnr, err := strconv.Atoi(episodeid)
+	if err != nil {
+		status = 1
+		return err
+	}
+
+	fd, err := ioutil.ReadFile("rss/" + showid)
+	if err != nil {
+		status = 1
+		return err
+	}
+
+	q := query{}
+	d := xml.NewDecoder(bytes.NewReader(fd))
+
+	err = d.Decode(&q)
+	if err != nil {
+		status = 1
+		return err
+	}
+
+	c := q.Channel
+	if epsnr >= len(c.Item) {
+		status = 1
+		return fmt.Errorf("there is no episode %v", epsnr)
+	}
+	eps := c.Item[epsnr]
+
+	commandToRun := exec.Command("/usr/bin/xclip", "-in")
+	commandToRun.Stdout = os.Stdout
+	commandToRun.Stderr = os.Stderr
+	xclipStdin, err := commandToRun.StdinPipe()
+	if err != nil {
+		status = 1
+		return err
+	}
+
+	err = commandToRun.Start()
+	if err != nil {
+		status = 1
+		return err
+	}
+	fmt.Fprintf(xclipStdin, "%v", eps.Link)
+
+	xclipStdin.Close()
+
+	err = commandToRun.Wait()
+	if err != nil {
+		status = 1
+		return err
+	}
+
+	return nil
+
 }
 
 func prompt() error {
@@ -247,6 +307,15 @@ func prompt() error {
 			err = usage()
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
+			}
+		case "get":
+			if len(args) < 3 {
+				fmt.Fprintf(os.Stderr, "not enough arguments!\n")
+			} else {
+				err = get(args[1], args[2])
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%v\n", err)
+				}
 			}
 		case "exit":
 			return nil
@@ -298,6 +367,16 @@ func main() {
 		}
 	case "help":
 		err = usage()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", err)
+		}
+	case "get":
+		if len(os.Args) < 4 {
+			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
+			status = 1
+			return
+		}
+		err = get(os.Args[2], os.Args[3])
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 		}

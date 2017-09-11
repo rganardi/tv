@@ -29,7 +29,10 @@ type episode struct {
 	PubDate string `xml:"pubDate"`
 }
 
-var status int = 0
+var (
+	version_number, build_date string = "unknown", "unknown"
+	status int = 0
+)
 
 func die() {
 	if status > 0 {
@@ -41,9 +44,9 @@ func die() {
 }
 
 func usage() error {
+	fmt.Print("tv - showrss handler\n")
+	fmt.Printf("build %s, %s\n", version_number, build_date)
 	fmt.Print(`
-tv - showrss handler
-
 	tv [COMMAND] [ARGUMENTS]
 
 Available commands

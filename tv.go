@@ -112,7 +112,7 @@ func fetch(showid string) error {
 		show, url := extract(line, "\t")
 
 		if show == showid {
-			fmt.Fprintf(os.Stdout, "found the show! url is %v\n", url)
+			fmt.Fprintf(os.Stdout, "found %v! url is %v\n", show, url)
 			err = download(url, "rss/"+showid)
 			if err != nil {
 				status = 1
@@ -189,6 +189,19 @@ func list(showid string) error {
 }
 
 func pull() error {
+	files, err := ioutil.ReadDir("rss")
+	if err != nil {
+		status = 1
+		return err
+	}
+
+	for _, file := range files {
+		err = fetch(file.Name())
+		if err != nil {
+			status = 1
+			return err
+		}
+	}
 	return nil
 }
 

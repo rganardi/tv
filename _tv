@@ -1,0 +1,43 @@
+#compdef tv
+
+(( $+functions[_tv_command] )) ||
+_tv_command()
+{
+	local -a _tv_cmds
+	_tv_cmds=(
+	"list:see all episodes"
+	"fetch:fetch new feed"
+	"get:copy magnet link"
+	"pull:fetch new feed for all shows"
+	"help:display usage information"
+	)
+
+	if (( CURRENT == 1 )); then
+		_describe -t commands 'tv command' _tv_cmds || compadd "$@"
+	else
+		local curcontext="$curcontext" expl
+
+		cmd="${${_tv_cmds[(r)$words[1]:*]%%:*}}"
+		
+		if (( $#cmd )); then
+			curcontext="${curcontext%:*:*}:tv_${cmd}:"
+
+			_call_function ret _tv_fetch || _message 'no more arguments'
+		else
+			_message "unknown tv command; $words[1]"
+		fi
+		return ret
+	fi
+}
+
+(( $+functions[_tv_fetch] )) ||
+_tv_fetch () {
+	_files -W $HOME/tv/rss/
+}
+
+_arguments -s \
+				'*::tv command:_tv_command'
+
+
+# vim: tabstop=2
+# vim: shiftwidth=2

@@ -1,10 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -53,7 +56,72 @@ Interactive mode is started when tv is executed without including the command as
 	return nil
 }
 
+func extract(s, sep string) (string, string) {
+	x := strings.Split(s, sep)
+	return x[0], x[1]
+}
+
+func download(url string, fileName string) error {
+	fmt.Fprintf(os.Stdout, "%-10s %s\n", "fetching", url)
+
+	output, err := os.Create(fileName)
+	if err != nil {
+		status = 1
+		return err
+	}
+	defer output.Close()
+
+	response, err := http.Get(url)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error while downloading %v\n%v\n", url, err)
+		status = 1
+		return err
+	}
+	defer response.Body.Close()
+
+	n, err := io.Copy(output, response.Body)
+	output.Sync()
+
+	fmt.Fprintf(os.Stdout, "%-10s %s %v bytes\n", "fetched", url, n)
+	return nil
+}
+
 func fetch(showid string) error {
+	fd, err := os.Open("subscribed")
+	if err != nil {
+		status = 1
+		return err
+	}
+	defer fd.Close()
+
+	reader := bufio.NewReader(fd)
+
+	var line string
+	for {
+		line, err = reader.ReadString('\n')
+		if err == io.EOF {
+			return fmt.Errorf("download link not found")
+		}
+		if err != nil {
+			fmt.Fprint(os.Stderr, "something's wrong\n")
+			status = 1
+			return err
+		}
+
+		line = strings.TrimSuffix(line, "\n")
+		show, url := extract(line, "\t")
+
+		if show == showid {
+			fmt.Fprintf(os.Stdout, "found the show! url is %v\n", url)
+			err = download(url, "rss/"+showid)
+			if err != nil {
+				status = 1
+				return err
+			}
+			return nil
+		}
+	}
+
 	return nil
 }
 

@@ -292,14 +292,23 @@ func prompt() error {
 
 		switch args[0] {
 		case "list":
-			err = list(args[1])
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
+			if len(args) < 2 {
+				fmt.Fprintf(os.Stderr, "not enough arguments!\n")
+			} else {
+				err = list(args[1])
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%v\n", err)
+				}
 			}
 		case "fetch":
-			err = fetch(args[1])
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
+			if len(args) < 2 {
+				fmt.Fprintf(os.Stderr, "not enough arguments!\n")
+				continue
+			} else {
+				err = fetch(args[1])
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%v\n", err)
+				}
 			}
 		case "pull":
 			err = pull()
@@ -352,15 +361,27 @@ func main() {
 
 	switch os.Args[1] {
 	case "list":
-		err = list(os.Args[2])
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-		}
-	case "fetch":
-		for _, showid := range os.Args[2:] {
-			err = fetch(showid)
+		if len(os.Args) < 3 {
+			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
+			status = 1
+			return
+		} else {
+			err = list(os.Args[2])
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "%v\n", err)
+			}
+		}
+	case "fetch":
+		if len(os.Args) < 3 {
+			fmt.Fprintf(os.Stderr, "not enough arguments!\n")
+			status = 1
+			return
+		} else {
+			for _, showid := range os.Args[2:] {
+				err = fetch(showid)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "%v\n", err)
+				}
 			}
 		}
 	case "pull":

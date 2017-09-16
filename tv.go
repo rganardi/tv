@@ -56,8 +56,6 @@ Available commands
 	get STRING ID	copy the magnet link for show STRING, episode ID
 	pull		fetch new feed for all shows
 	help		display this help text
-
-Interactive mode is started when tv is executed without including the command as a command line parameter. Commands are then entered on the wpa_cli prompt.
 `)
 	return nil
 }
@@ -238,78 +236,6 @@ func get(showid string, episodeid string) error {
 
 }
 
-func prompt() error {
-	fmt.Fprintf(os.Stdout, "hi!\n")
-	for {
-		fmt.Fprintf(os.Stdout, "> ")
-		reader := bufio.NewReader(os.Stdin)
-
-		line, err := reader.ReadString('\n')
-		if err == io.EOF {
-			fmt.Fprintf(os.Stdout, "\rgoodbye!\n")
-			return nil
-		}
-		if err != nil {
-			status = 1
-			return err
-		}
-
-		line = strings.TrimSuffix(line, "\n")
-
-		args := strings.Fields(line)
-
-		switch args[0] {
-		case "list":
-			if len(args) < 2 {
-				fmt.Fprintf(os.Stderr, "not enough arguments!\n")
-			} else {
-				err = list(args[1])
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "%v\n", err)
-				}
-			}
-		case "fetch":
-			if len(args) < 2 {
-				fmt.Fprintf(os.Stderr, "not enough arguments!\n")
-				continue
-			} else {
-				err = fetch(args[1])
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "%v\n", err)
-				}
-			}
-		case "pull":
-			err = pull()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-			}
-		case "help":
-			err = usage()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-			}
-		case "get":
-			if len(args) < 3 {
-				fmt.Fprintf(os.Stderr, "not enough arguments!\n")
-			} else {
-				err = get(args[1], args[2])
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "%v\n", err)
-				}
-			}
-		case "exit":
-			return nil
-		default:
-			fmt.Fprintf(os.Stderr, "error: unknown command \"%v\"\n", args[0])
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
-			}
-		}
-
-	}
-	return nil
-}
-
 func main() {
 	defer die()
 
@@ -319,11 +245,9 @@ func main() {
 	}
 
 	if len(os.Args) < 2 {
-		err = prompt()
-		if err != nil {
-			status = 1
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-		}
+		status = 1
+		fmt.Fprintf(os.Stderr, "not enough arguments!\n")
+		_ = usage()
 		return
 	}
 

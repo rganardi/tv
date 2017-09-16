@@ -151,47 +151,12 @@ func list(showid string) error {
 
 	c := q.Channel
 
-	env := os.Environ()
-	if err != nil {
-		fmt.Fprint(os.Stderr, "error getting environment variables\n")
-		status = 1
-		return err
-	}
-
-	pager := "/usr/bin/less"
-	for _, variable := range env {
-		if strings.HasPrefix(variable, "PAGER") {
-			pager = strings.TrimPrefix(variable, "PAGER=")
-		}
-	}
-
-	commandToRun := exec.Command(pager)
-	commandToRun.Stdout = os.Stdout
-	pagerStdin, err := commandToRun.StdinPipe()
-	if err != nil {
-		status = 1
-		return err
-	}
-
-	err = commandToRun.Start()
-	if err != nil {
-		status = 1
-		return err
-	}
 	for i, eps := range c.Item {
-		fmt.Fprintf(pagerStdin, "id\t\t%v\n", i)
-		fmt.Fprintf(pagerStdin, "title\t\t%v\n", eps.Title)
-		fmt.Fprintf(pagerStdin, "date\t\t%v\n", eps.PubDate)
-		fmt.Fprintf(pagerStdin, "link\t\t%v\n", eps.Link)
-		fmt.Fprintf(pagerStdin, "\n")
-	}
-
-	pagerStdin.Close()
-
-	err = commandToRun.Wait()
-	if err != nil {
-		status = 1
-		return err
+		fmt.Fprintf(os.Stdout, "id\t\t%v\n", i)
+		fmt.Fprintf(os.Stdout, "title\t\t%v\n", eps.Title)
+		fmt.Fprintf(os.Stdout, "date\t\t%v\n", eps.PubDate)
+		fmt.Fprintf(os.Stdout, "link\t\t%v\n", eps.Link)
+		fmt.Fprintf(os.Stdout, "\n")
 	}
 
 	return nil

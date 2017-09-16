@@ -32,6 +32,7 @@ type episode struct {
 var (
 	version_number, build_date string = "unknown", "unknown"
 	status int = 0
+	subscribed string = "subscribed"
 )
 
 func die() {
@@ -96,7 +97,7 @@ func download(url string, fileName string) error {
 }
 
 func fetch(showid string) error {
-	fd, err := os.Open("subscribed")
+	fd, err := os.Open(subscribed)
 	if err != nil {
 		status = 1
 		return err

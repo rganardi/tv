@@ -232,6 +232,8 @@ func get(showid string, episodeid string) error {
 		return err
 	}
 
+	fmt.Fprintf(os.Stdout, "copied link for \"%v\" into clipboard\n", eps.Title)
+
 	return nil
 
 }

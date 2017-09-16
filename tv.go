@@ -70,8 +70,6 @@ func extract(s, sep string) (string, string) {
 }
 
 func download(url string, fileName string) error {
-	fmt.Fprintf(os.Stdout, "%-10s %s\n", "fetching", url)
-
 	output, err := os.Create(fileName)
 	if err != nil {
 		status = 1
@@ -87,10 +85,9 @@ func download(url string, fileName string) error {
 	}
 	defer response.Body.Close()
 
-	n, err := io.Copy(output, response.Body)
+	_, err = io.Copy(output, response.Body)
 	output.Sync()
 
-	fmt.Fprintf(os.Stdout, "%-10s %s %v bytes\n", "fetched", url, n)
 	return nil
 }
 
@@ -168,6 +165,7 @@ func pull() error {
 	}
 
 	for _, file := range files {
+		fmt.Fprintf(os.Stdout, "%s %-50s\r", "fetching", file.Name())
 		err = fetch(file.Name())
 		if err != nil {
 			status = 1

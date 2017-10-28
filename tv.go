@@ -70,23 +70,40 @@ func extract(s, sep string) (string, string) {
 }
 
 func download(url string, fileName string) error {
-	output, err := os.Create(fileName)
-	if err != nil {
-		status = 1
-		return err
-	}
-	defer output.Close()
-
 	response, err := http.Get(url)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error while downloading %v\n%v\n", url, err)
+		fmt.Fprintf(os.Stderr, "error while downloading %v\n", url)
 		status = 1
 		return err
 	}
 	defer response.Body.Close()
 
-	_, err = io.Copy(output, response.Body)
-	output.Sync()
+	if (response.StatusCode != http.StatusOK) {
+		status = 1
+		return fmt.Errorf("HTTP status code : %v", response.StatusCode)
+	}
+
+	//check if the received file is a showrss rss
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		status = 1
+		return err
+	}
+
+	q := query{}
+	d := xml.NewDecoder(bytes.NewReader(body))
+
+	err = d.Decode(&q)
+	if err != nil {
+		status = 1
+		return fmt.Errorf("downloaded file is not an rss feed")
+	}
+
+	err = ioutil.WriteFile(fileName, body, 0644)
+	if err != nil {
+		status = 1
+		return err
+	}
 
 	return nil
 }

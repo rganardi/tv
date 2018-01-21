@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 )
@@ -221,31 +220,7 @@ func get(showid string, episodeid string) error {
 	}
 	eps := c.Item[epsnr]
 
-	commandToRun := exec.Command("/usr/bin/xclip", "-in")
-	commandToRun.Stdout = os.Stdout
-	commandToRun.Stderr = os.Stderr
-	xclipStdin, err := commandToRun.StdinPipe()
-	if err != nil {
-		status = 1
-		return err
-	}
-
-	err = commandToRun.Start()
-	if err != nil {
-		status = 1
-		return err
-	}
-	fmt.Fprintf(xclipStdin, "%v", eps.Link)
-
-	xclipStdin.Close()
-
-	err = commandToRun.Wait()
-	if err != nil {
-		status = 1
-		return err
-	}
-
-	fmt.Fprintf(os.Stdout, "copied link for \"%v\" into clipboard\n", eps.Title)
+	fmt.Fprintf(os.Stdout, "%v", eps.Link)
 
 	return nil
 

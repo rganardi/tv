@@ -31,8 +31,8 @@ type episode struct {
 
 var (
 	version_number, build_date string = "unknown", "unknown"
-	status int = 0
-	subscribed string = "subscribed"
+	status                     int    = 0
+	subscribed                 string = "subscribed"
 )
 
 func die() {
@@ -78,7 +78,7 @@ func download(url string, fileName string) error {
 	}
 	defer response.Body.Close()
 
-	if (response.StatusCode != http.StatusOK) {
+	if response.StatusCode != http.StatusOK {
 		status = 1
 		return fmt.Errorf("HTTP status code : %v", response.StatusCode)
 	}

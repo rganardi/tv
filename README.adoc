@@ -29,4 +29,4 @@ The format is `<show name>\t<link>`, one show on each line.
 
 When `tv pull` is run, `tv` will go through each rss file in `~/tv/rss`, look up the url in `~/tv/subscribed`, and download the rss.
 
-`tv get` copies the link into `xclip`. If you use some other clipboard manager, please edit the corresponding line in the source.
+`tv get` prints the link to `stdout`.

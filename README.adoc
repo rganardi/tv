@@ -1,3 +1,5 @@
+image:https://travis-ci.org/rganardi/tv.svg?branch=master["travis", link="https://travis-ci.org/rganardi/tv"]
+
 == installation
 
 	make install
